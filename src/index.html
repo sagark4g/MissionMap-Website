@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="
+default-src 'self' https:;
+img-src 'self' data: https:;
+style-src 'self' 'unsafe-inline' https:;
+script-src 'self' 'unsafe-inline';
+font-src 'self' https: data:;
+connect-src 'self' https://vite-react-missionmap.vercel.app https://figma-mission-map-api.vercel.app;
+base-uri 'self';
+frame-ancestors *;
+">
+    <title>MissionMap - Make progress you can actually feel</title>
+    <meta name="description" content="MissionMap helps you make progress in 6 life areas through personalized action plans. Start your journey today." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+    
+    <script>
+      /* MissionMap unified tracker STUB for Figma Make preview */
+      window.MM = window.MM || {};
+      MM.STUB_MODE = true; // set false after wiring backend
+      MM.API_BASE = "https://vite-react-missionmap.vercel.app";
+
+      /* Example active tasks across two subpacks */
+      MM.tasks = [
+        { id:"t1", packId:"fitness", subpackId:"fat-loss-sprint", title:"Walk 20 min", unit:"min", target:20, timeOfDay:"morning", days:"MTWTFSS", dueSlot:"07:00–08:00", progress:0 },
+        { id:"t2", packId:"fitness", subpackId:"strength-starter", title:"Stretch 10 min", unit:"min", target:10, timeOfDay:"evening", days:"MTWTF--", dueSlot:"20:30–21:00", progress:0 },
+        { id:"t3", packId:"work", subpackId:"deep-work-builder", title:"Deep work 90 min", unit:"min", target:90, timeOfDay:"morning", days:"MTWTF--", dueSlot:"09:00–10:30", progress:0 },
+        { id:"t4", packId:"money", subpackId:"emergency-fund-start", title:"Log spend (₹)", unit:"count", target:1, timeOfDay:"any", days:"MTWTFSS", dueSlot:"Anytime", progress:0 }
+      ];
+
+      function dayIndex(d = new Date()) {
+        // Sun=0, Mon=1... convert to M T W T F S S index 0..6 where M=0
+        const js = d.getDay(); // 0..6 Sun..Sat
+        return (js + 6) % 7;
+      }
+      function activeToday(task, d = new Date()) {
+        const idx = dayIndex(d); // 0..6 where 0 = Mon
+        const map = ['M','T','W','T','F','S','S'];
+        return (task.days || '').charAt(idx) === map[idx];
+      }
+      function saveProgress(id, val) {
+        const key = "mm-progress:" + id + ":" + new Date().toDateString();
+        localStorage.setItem(key, String(val));
+      }
+      function loadProgress(id) {
+        const key = "mm-progress:" + id + ":" + new Date().toDateString();
+        const v = localStorage.getItem(key);
+        return v ? Number(v) : 0;
+      }
+      function renderToday() {
+        const root = document.querySelector("#mm-task-list");
+        if (!root) return;
+        const sort = (document.querySelector('[data-sort].is-active')?.dataset.sort) || 'time';
+        const tod = document.querySelector('[data-view="today"]')?.classList.contains('is-active');
+
+        // filter by selected pack (if any)
+        const pf = document.querySelector('#mm-pack-filter')?.value || 'all';
+        let items = MM.tasks
+          .filter(t => pf === 'all' ? true : t.packId === pf)
+          .map(t => ({...t, progress: loadProgress(t.id)}));
+
+        // only today items if "Today" view
+        if (tod) items = items.filter(activeToday);
+
+        // sort
+        if (sort === 'progress') items.sort((a,b) => (a.progress/a.target) - (b.progress/b.target));
+        if (sort === 'subpack') items.sort((a,b) => (a.subpackId > b.subpackId ? 1 : -1));
+        if (sort === 'time') items.sort((a,b) => (a.dueSlot > b.dueSlot ? 1 : -1));
+
+        root.innerHTML = "";
+        items.forEach(t => {
+          const percent = Math.min(100, Math.round((t.progress / t.target) * 100));
+          const el = document.createElement('div');
+          el.className = 'mm-task border border-[var(--stroke-subtle)] rounded-lg p-4 hover:bg-[var(--surface-soft)] transition-colors';
+          el.setAttribute('data-task-id', t.id);
+          el.setAttribute('data-pack-id', t.packId);
+          el.setAttribute('data-subpack-id', t.subpackId);
+          el.setAttribute('data-time-of-day', t.timeOfDay);
+          el.setAttribute('data-due-slot', t.dueSlot);
+          el.innerHTML = `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3 flex-1">
+                <div class="w-3 h-3 rounded-full pack-dot ${t.packId}" style="background-color: ${
+                  t.packId === 'fitness' ? 'var(--accent-fitness)' :
+                  t.packId === 'work' ? 'var(--accent-work)' :
+                  t.packId === 'money' ? 'var(--accent-money)' :
+                  t.packId === 'relationships' ? 'var(--accent-relationships)' :
+                  t.packId === 'purpose' ? 'var(--accent-purpose)' :
+                  'var(--accent-learning)'
+                }"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-[var(--text-default)] truncate">${t.title}</div>
+                  <div class="text-[var(--text-small)] text-[var(--text-muted)] flex items-center gap-2 mt-1">
+                    <span>${t.dueSlot}</span>
+                    <span>•</span>
+                    <span>${t.days}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-sm bg-gray-100 px-2 py-1 rounded progress-chip">${t.progress}/${t.target} ${t.unit}</span>
+                <button class="mm-log px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50" data-id="${t.id}" ${percent>=100?'disabled':''}">+${t.unit === 'min' ? 5 : 1}</button>
+                <button class="mm-check px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700" data-id="${t.id}" ${percent>=100?'disabled':''}>${percent>=100?'Done':'Mark'}</button>
+              </div>
+            </div>
+          `;
+          root.appendChild(el);
+        });
+        
+        // Show empty state if no tasks
+        if (items.length === 0) {
+          const emptyState = document.querySelector('#mm-empty-state');
+          if (emptyState) {
+            emptyState.classList.remove('hidden');
+          }
+        } else {
+          const emptyState = document.querySelector('#mm-empty-state');
+          if (emptyState) {
+            emptyState.classList.add('hidden');
+          }
+        }
+        
+        // bind
+        root.querySelectorAll(".mm-log").forEach(b=>{
+          b.onclick = () => {
+            const id = b.dataset.id;
+            const task = MM.tasks.find(x=>x.id===id);
+            const step = task.unit==='min'?5:1;
+            const cur = loadProgress(id);
+            const next = Math.min(task.target, cur + step);
+            saveProgress(id, next);
+            renderToday();
+          };
+        });
+        root.querySelectorAll(".mm-check").forEach(b=>{
+          b.onclick = () => {
+            const id = b.dataset.id;
+            const task = MM.tasks.find(x=>x.id===id);
+            saveProgress(id, task.target);
+            renderToday();
+          };
+        });
+      }
+      // simple listeners (assumes select / buttons exist)
+      document.addEventListener("click",(e)=>{
+        const t = e.target;
+        if (t.matches("[data-sort]")) {
+          document.querySelectorAll("[data-sort]").forEach(x=>x.classList.remove("is-active"));
+          t.classList.add("is-active");
+          renderToday();
+        }
+        if (t.matches("[data-view]")) {
+          document.querySelectorAll("[data-view]").forEach(x=>x.classList.remove("is-active"));
+          t.classList.add("is-active");
+          // if week view selected, you can render a grid; for now keep today
+          renderToday();
+        }
+      });
+      document.addEventListener("change",(e)=>{
+        if (e.target && e.target.id === "mm-pack-filter") renderToday();
+      });
+      window.addEventListener("DOMContentLoaded", renderToday);
+      // Also render when navigating to tracker page
+      setTimeout(renderToday, 100);
+    </script>
+    
+    <script>
+      /* MissionMap – Review availability STUB for Figma Make preview */
+      window.MM = window.MM || {};
+      MM.STUB_MODE = true;                 // set false after backend wiring
+      MM.REVIEW_CADENCE_DAYS = 7;          // one review per 7 days
+      MM.LS_WEEK_START = "mm-week-start";  // ISO date of current week start
+      MM.LS_WEEK_NUM   = "mm-week-num";    // integer, 1-based
+
+      // Monday as start-of-week
+      function startOfWeek(d = new Date()) {
+        const date = new Date(d);
+        const dow = (date.getDay() + 6) % 7; // Mon=0..Sun=6
+        date.setDate(date.getDate() - dow);
+        date.setHours(0,0,0,0);
+        return date;
+      }
+      function loadWeekStart() {
+        const raw = localStorage.getItem(MM.LS_WEEK_START);
+        if (raw) return new Date(raw);
+        const s = startOfWeek();
+        localStorage.setItem(MM.LS_WEEK_START, s.toISOString());
+        if (!localStorage.getItem(MM.LS_WEEK_NUM)) localStorage.setItem(MM.LS_WEEK_NUM, "1");
+        return s;
+      }
+      function daysSince(d) {
+        const ms = Date.now() - d.getTime();
+        return Math.floor(ms / (1000*60*60*24));
+      }
+      function isSunday(d = new Date()) { return d.getDay() === 0; }
+      function reviewDue() {
+        const start = loadWeekStart();
+        const diff = daysSince(start);
+        return diff >= MM.REVIEW_CADENCE_DAYS - 1 || isSunday();
+      }
+      function weekNumber() {
+        return Number(localStorage.getItem(MM.LS_WEEK_NUM) || "1");
+      }
+
+      function uiShowReviewDue(isDue) {
+        // Navbar dot
+        const dot = document.querySelector(".mm-review-dot");
+        if (dot) dot.style.visibility = isDue ? "visible" : "hidden";
+
+        // Week summary card
+        const card = document.querySelector("#mm-week-summary");
+        if (card) {
+          const helper = card.querySelector(".mm-helper");
+          const btn = document.querySelector("#mm-start-review");
+          if (helper) helper.textContent = isDue
+            ? "It's time to review and set next week."
+            : "Review opens on Sunday or after 7 days.";
+          if (btn) btn.disabled = !isDue;
+          const wk = card.querySelector(".mm-week-number");
+          if (wk) wk.textContent = String(weekNumber());
+        }
+
+        // Footer CTA
+        const bar = document.querySelector("#mm-review-footer-cta");
+        if (bar) bar.style.display = isDue ? "flex" : "none";
+      }
+
+      function goto(url) { window.location.href = url; }
+
+      function bindReview() {
+        const navLink = document.querySelector("#mm-review-nav a[href='/review']");
+        if (navLink) navLink.onclick = (e)=>{ e.preventDefault(); goto("/review"); };
+
+        const topBtn = document.querySelector("#mm-start-review");
+        if (topBtn) topBtn.onclick = ()=> goto("/review");
+
+        const footerBtn = document.querySelector("#mm-start-review-footer");
+        if (footerBtn) footerBtn.onclick = ()=> goto("/review");
+
+        // Handle "Save & start week" in the review page (step 3)
+        const saveBtn = document.querySelector("#mm-save-nextweek");
+        if (saveBtn) {
+          saveBtn.addEventListener("click", (e)=>{
+            // In preview, just roll the week:
+            const nextStart = startOfWeek(new Date(Date.now() + 8.64e7)); // set new week start ~tomorrow 00:00, auto-normalized by startOfWeek() on first run
+            localStorage.setItem(MM.LS_WEEK_START, nextStart.toISOString());
+            localStorage.setItem(MM.LS_WEEK_NUM, String(weekNumber()+1));
+            goto("/tracker");
+          });
+        }
+      }
+
+      function initReviewUI() {
+        uiShowReviewDue(reviewDue());
+        bindReview();
+      }
+      window.addEventListener("DOMContentLoaded", initReviewUI);
+      // Also init when navigating
+      setTimeout(initReviewUI, 100);
+    </script>
+  </body>
+</html>

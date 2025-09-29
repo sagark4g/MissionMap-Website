@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* MissionMap Brand Colors - Updated */
+  --brand-primary: #1A73E8;
+  --brand-primary-deep: #1557B0;
+  --text-default: #0F172A;
+  --text-muted: #64748B;
+  --surface-base: #FFFFFF;
+  --surface-soft: #F8FAFC;
+  --stroke-subtle: #E2E8F0;
+  --success: #16A34A;
+  
+  /* Category Accent Colors */
+  --accent-fitness: #10B981;
+  --accent-work: #6366F1;
+  --accent-money: #F59E0B;
+  --accent-relationships: #F43F5E;
+  --accent-purpose: #8B5CF6;
+  --accent-learning: #3B82F6;
+  
+  /* Typography Scale */
+  --text-h1: 48px;
+  --text-h2: 32px;
+  --text-h3: 24px;
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-label: 12px;
+  
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  
+  /* Radius Scale */
+  --radius-card: 12px;
+  --radius-input: 8px;
+  --radius-pill: 999px;
+  
+  /* Shadows */
+  --shadow-card: 0 6px 20px rgba(15, 23, 42, 0.08);
+
+  /* Shadcn variables - Updated for new brand */
+  --background: 0 0% 100%;
+  --foreground: 215 25% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 215 25% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 25% 8%;
+  --primary: 214 84% 51%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 98%;
+  --secondary-foreground: 215 25% 8%;
+  --muted: 210 40% 98%;
+  --muted-foreground: 215 13% 45%;
+  --accent: 210 40% 98%;
+  --accent-foreground: 215 25% 8%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 214 84% 51%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-default);
+    background-color: var(--surface-base);
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-default);
+  }
+  
+  h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--text-default);
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.33;
+    color: var(--text-default);
+  }
+  
+  p {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text-default);
+  }
+  
+  .text-muted {
+    color: var(--text-muted);
+  }
+  
+  .bg-soft {
+    background-color: var(--surface-soft);
+  }
+  
+  .border-subtle {
+    border-color: var(--stroke-subtle);
+  }
+  
+  .btn-primary {
+    background-color: var(--brand-primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius-input);
+    font-weight: 500;
+    min-height: 44px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--brand-primary-deep);
+  }
+  
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--text-default);
+    border: 1px solid var(--stroke-subtle);
+    padding: 12px 24px;
+    border-radius: var(--radius-input);
+    font-weight: 500;
+    min-height: 44px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--surface-soft);
+  }
+}
+
+/* Utility classes for MissionMap design tokens */
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+.accent-fitness { color: var(--accent-fitness); }
+.accent-work { color: var(--accent-work); }
+.accent-money { color: var(--accent-money); }
+.accent-relationships { color: var(--accent-relationships); }
+.accent-purpose { color: var(--accent-purpose); }
+.accent-learning { color: var(--accent-learning); }
+
+.bg-accent-fitness { background-color: var(--accent-fitness); }
+.bg-accent-work { background-color: var(--accent-work); }
+.bg-accent-money { background-color: var(--accent-money); }
+.bg-accent-relationships { background-color: var(--accent-relationships); }
+.bg-accent-purpose { background-color: var(--accent-purpose); }
+.bg-accent-learning { background-color: var(--accent-learning); }
+
+/* Pack dot colors for the tracker */
+.pack-dot.fitness { background-color: var(--accent-fitness); }
+.pack-dot.work { background-color: var(--accent-work); }
+.pack-dot.money { background-color: var(--accent-money); }
+.pack-dot.relationships { background-color: var(--accent-relationships); }
+.pack-dot.purpose { background-color: var(--accent-purpose); }
+.pack-dot.learning { background-color: var(--accent-learning); }
